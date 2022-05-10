@@ -1,0 +1,240 @@
+#include "bits/stdc++.h"
+#include <stdio.h>
+#include <conio.h>
+#include <string.h>
+#include <stdlib.h>
+
+using namespace std;
+
+const int N = 10;
+const int count_mines = 10;
+char field_hidden[N][N];
+char field[N][N];
+int field_flag[N][N]={0};
+int row[] = {-1, -1, -1, 0, 0, 1, 1, 1 };//������
+int col[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+void clear_field()
+{
+	char s ='*';
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++ )
+		{
+			field[i][j] ='G';
+			field_hidden[i][j] = 0;
+			field_flag[i][j]=0;
+		}
+	}
+}
+
+void set_mine_count()
+{
+	srand(time(NULL));
+	int i, j, x, y, k, chet=0;
+	for (i = 0; i < count_mines; )
+	{
+		x = rand()%N;
+		y = rand()%N;
+		if(!field_hidden[x][y])
+		{
+			field_hidden[x][y] = '*';
+			i++;
+		}
+	}
+	for ( i = 0; i < N; i++)
+	{
+		for ( j = 0; j < N; j++ )
+		{
+			if (field_hidden[i][j] != '*')
+			{
+				for ( k = 0; k < 8; k++ )
+				{
+					if ((i + row[k] != -1) && (i + row[k]!= N))
+					{
+						if ((j + col[k] != -1) && (j + col[k]!= N))
+						{
+							if(field_hidden[i + row[k]][j + col[k]] == '*')
+							{
+								chet +=1;
+							}
+						}
+					}
+				}
+
+			field_hidden[i][j] = '0'+ chet;
+			chet =0;
+			}
+		}
+	}
+}
+
+void show_field()
+{
+	for (int i = 0; i <= N; i++)
+		cout << i << " ";
+	cout <<"\n----------------------\n";
+	for (int i = 0; i < N; i++)
+	{
+		cout <<(char)(i+65) <<"|";
+		for (int j = 0; j < N; j++ )
+		{
+			cout << field[i][j] << " " ;
+
+		}
+		cout << endl;
+	}
+}
+void show_field1()
+{
+	for (int i = 0; i <= N; i++)
+		cout << i << " ";
+	cout <<"\n----------------------\n";
+	for (int i = 0; i < N; i++)
+	{
+		cout <<(char)(i+65) <<"|";
+		for (int j = 0; j < N; j++ )
+		{
+			cout << field_hidden[i][j] << " " ;
+
+		}
+		cout << endl;
+	}
+}
+
+void otchistka(int x, int y)
+{
+	int i, j;
+	for( i = x - 1; i < x + 2; i++)
+	{
+		for (j = y - 1 ; j < y + 2; j ++)
+		if(i>=0 && j>=0 && i<N && j<N)
+		{       
+				field[i][j] = field_hidden[i][j];
+
+		}
+	}
+}
+
+
+bool shot(int x, int y)
+{
+int cnt = 0, i, j;
+if(x>=N || y>=N || x<0 ||x<0) return true;
+field_flag[x][y]=1;
+	if(field_hidden[x][y] =='*')
+	{
+		for(i = 0; i < N; i++)
+		{
+			for(j = 0; j < N; j++)
+			{
+				if(field_hidden[i][j] =='*')
+				{
+					field[i][j]=field_hidden[i][j];
+				}
+			}
+		}
+		return false;
+	}
+
+				field[x][y] = field_hidden[x][y];
+				if (field_hidden[x][y] =='0')
+				{
+					otchistka(x,y);
+					if(field[x+1][y] =='0' && !field_flag[x+1][y]) { shot(x+1,y);}
+					if(field[x-1][y] =='0' && !field_flag[x-1][y]) { shot(x-1,y);}
+                    if(field[x][y+1] =='0' && !field_flag[x][y+1]) { shot(x,y+1);}
+                    if(field[x][y-1] =='0' && !field_flag[x][y-1]) { shot(x,y-1);}
+				}
+				return true;
+
+}
+
+void flag()
+{
+	char x1;
+	int y1;
+	puts ("select coordinates" );
+	cin >> x1 >> y1;
+	x1 = x1-65;
+	y1 = y1-1;
+	field[x1][y1] = '&';
+}
+void delete_flag()
+{
+	char x1;
+	int y1;
+	puts ("select coordinates" );
+	cin >> x1 >> y1;
+	x1 = x1-65;
+	y1 = y1-1;
+	field[x1][y1] = 'G';
+	cout << 1 ;	
+}
+
+bool victory()
+{
+	int i, j, m = 0;
+	for (i = 0; i < N; i++ )
+		{
+			for (j = 0; j < N; j++)
+			{
+				if ((field[i][j] =='&') && field_hidden[i][j] == '*')
+					m ++;
+					return true;
+			}
+		}
+	if (m == count_mines )
+	{
+		puts( "You win");
+		return false;
+	}
+}
+
+void game()
+{
+	int y;
+	char x, k;
+	bool key1 = true, key2 = true;
+	clear_field();
+	set_mine_count();
+do
+	{
+		show_field();
+		cout << endl;
+	//	show_field1();
+	//	cout << endl;
+	//	show_field2();
+		
+		cout << "Shot";
+		cin >> x >> y;
+		if (x == '&')
+			flag();
+		else
+		{
+			if (x == '!')
+				delete_flag();
+			x = x - 65;
+			y = y - 1;
+			key2 = shot(x, y);
+			cout <<key2;
+		}
+		key1 = victory();
+		cout << key1;
+	} while( key1 == true && key2 == true);
+	cout << "Game over" << endl;
+
+
+}
+
+
+int main() //������� ����, � �������� ������ ��� �������
+{ 
+	char c;
+  	puts(" Create new game? (y/n)"); 
+  	c=getch();
+  	if(c=='y')
+  		game();
+	else return 0;
+}
+
